@@ -1,1 +1,15 @@
-site_name: My Docs
+site_name: Made With ML
+site_url: https://madewithml.com/
+repo_url: https://github.com/GokuMohandas/mlops-course/
+nav:
+  - Home: index.md
+  - workflows:
+    - main: micrograd/main.md
+  - tagifai:
+    - data: micrograd/nn.md
+    - evaluate: micrograd/engine.md
+theme: readthedocs
+plugins:
+  - mkdocstrings
+watch:
+  - .  # reload docs for any file changes
