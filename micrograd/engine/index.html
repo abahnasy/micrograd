@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://madewithml.com/micrograd/engine/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>evaluate - Made With ML</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link href="../../assets/_mkdocstrings.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "evaluate";
+        var mkdocs_page_input_path = "micrograd/engine.md";
+        var mkdocs_page_url = "/micrograd/engine/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Made With ML
+        </a>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">workflows</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../main.md">main</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">tagifai</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../nn/">data</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">evaluate</a>
+    <ul class="current">
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Made With ML</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>tagifai &raquo;</li><li>evaluate</li>
+    <li class="wy-breadcrumbs-aside">
+        <a href="https://github.com/GokuMohandas/mlops-course/edit/master/docs/micrograd/engine.md"
+          class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div class="doc doc-object doc-module">
+
+<a id="micrograd.engine"></a>
+    <div class="doc doc-contents first">
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 id="micrograd.engine.Value" class="doc doc-heading">
+        <code>
+Value        </code>
+
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>stores a single scalar value and its gradient</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>x = Value(3.0)
+y = x * x
+y.backward()
+x.grad
+6.0</p>
+</blockquote>
+</blockquote>
+</blockquote>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/engine.py</code></summary>
+          <pre class="highlight"><code class="language-python">class Value:
+    """stores a single scalar value and its gradient
+    &gt;&gt;&gt; x = Value(3.0)
+    &gt;&gt;&gt; y = x * x
+    &gt;&gt;&gt; y.backward()
+    &gt;&gt;&gt; x.grad
+    6.0
+    """
+
+    def __init__(self, data, _children=(), _op=""):
+        self.data = data
+        self.grad = 0
+        # internal variables used for autograd graph construction
+        self._backward = lambda: None
+        self._prev = set(_children)
+        self._op = _op  # the op that produced this node, for graphviz / debugging / etc
+
+    def __add__(self, other):
+        """Add two values"""
+        other = other if isinstance(other, Value) else Value(other)
+        out = Value(self.data + other.data, (self, other), "+")
+
+        def _backward():
+            """backpropagate the gradient to the inputs"""
+            self.grad += out.grad
+            other.grad += out.grad
+
+        out._backward = _backward
+
+        return out
+
+    def __mul__(self, other):
+        """multiply two values"""
+        other = other if isinstance(other, Value) else Value(other)
+        out = Value(self.data * other.data, (self, other), "*")
+
+        def _backward():
+            self.grad += other.data * out.grad
+            other.grad += self.data * out.grad
+
+        out._backward = _backward
+
+        return out
+
+    def __pow__(self, other):
+        """raise a value to a power"""
+        assert isinstance(
+            other, (int, float)
+        ), "only supporting int/float powers for now"
+        out = Value(self.data**other, (self,), f"**{other}")
+
+        def _backward():
+            self.grad += (other * self.data ** (other - 1)) * out.grad
+
+        out._backward = _backward
+
+        return out
+
+    def relu(self):
+        """relu activation function"""
+        out = Value(0 if self.data &lt; 0 else self.data, (self,), "ReLU")
+
+        def _backward():
+            self.grad += (out.data &gt; 0) * out.grad
+
+        out._backward = _backward
+
+        return out
+
+    def backward(self):
+        """backpropagate the gradient through the graph"""
+        # topological order all of the children in the graph
+        topo = []
+        visited = set()
+
+        def build_topo(v):
+            if v not in visited:
+                visited.add(v)
+                for child in v._prev:
+                    build_topo(child)
+                topo.append(v)
+
+        build_topo(self)
+
+        # go one variable at a time and apply the chain rule to get its gradient
+        self.grad = 1
+        for v in reversed(topo):
+            v._backward()
+
+    def __neg__(self):  # -self
+        """negate a value"""
+        return self * -1
+
+    def __radd__(self, other):  # other + self
+        """add two values"""
+        return self + other
+
+    def __sub__(self, other):  # self - other
+        """subtract two values"""
+        return self + (-other)
+
+    def __rsub__(self, other):  # other - self
+        """subtract two values"""
+        return other + (-self)
+
+    def __rmul__(self, other):  # other * self
+        """multiply two values"""
+        return self * other
+
+    def __truediv__(self, other):  # self / other
+        """divide two values"""
+        return self * other**-1
+
+    def __rtruediv__(self, other):  # other / self
+        """divide two values"""
+        return other * self**-1
+
+    def __repr__(self):
+        """print a value"""
+        return f"Value(data={self.data}, grad={self.grad})"
+</code></pre>
+        </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.engine.Value.__add__" class="doc doc-heading">
+<code class="highlight language-python">__add__(self, other)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Add two values</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/engine.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __add__(self, other):
+    """Add two values"""
+    other = other if isinstance(other, Value) else Value(other)
+    out = Value(self.data + other.data, (self, other), "+")
+
+    def _backward():
+        """backpropagate the gradient to the inputs"""
+        self.grad += out.grad
+        other.grad += out.grad
+
+    out._backward = _backward
+
+    return out
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.engine.Value.__mul__" class="doc doc-heading">
+<code class="highlight language-python">__mul__(self, other)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>multiply two values</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/engine.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __mul__(self, other):
+    """multiply two values"""
+    other = other if isinstance(other, Value) else Value(other)
+    out = Value(self.data * other.data, (self, other), "*")
+
+    def _backward():
+        self.grad += other.data * out.grad
+        other.grad += self.data * out.grad
+
+    out._backward = _backward
+
+    return out
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.engine.Value.__neg__" class="doc doc-heading">
+<code class="highlight language-python">__neg__(self)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>negate a value</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/engine.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __neg__(self):  # -self
+    """negate a value"""
+    return self * -1
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.engine.Value.__pow__" class="doc doc-heading">
+<code class="highlight language-python">__pow__(self, other)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>raise a value to a power</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/engine.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __pow__(self, other):
+    """raise a value to a power"""
+    assert isinstance(
+        other, (int, float)
+    ), "only supporting int/float powers for now"
+    out = Value(self.data**other, (self,), f"**{other}")
+
+    def _backward():
+        self.grad += (other * self.data ** (other - 1)) * out.grad
+
+    out._backward = _backward
+
+    return out
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.engine.Value.__radd__" class="doc doc-heading">
+<code class="highlight language-python">__radd__(self, other)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>add two values</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/engine.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __radd__(self, other):  # other + self
+    """add two values"""
+    return self + other
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.engine.Value.__repr__" class="doc doc-heading">
+<code class="highlight language-python">__repr__(self)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>print a value</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/engine.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __repr__(self):
+    """print a value"""
+    return f"Value(data={self.data}, grad={self.grad})"
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.engine.Value.__rmul__" class="doc doc-heading">
+<code class="highlight language-python">__rmul__(self, other)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>multiply two values</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/engine.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __rmul__(self, other):  # other * self
+    """multiply two values"""
+    return self * other
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.engine.Value.__rsub__" class="doc doc-heading">
+<code class="highlight language-python">__rsub__(self, other)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>subtract two values</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/engine.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __rsub__(self, other):  # other - self
+    """subtract two values"""
+    return other + (-self)
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.engine.Value.__rtruediv__" class="doc doc-heading">
+<code class="highlight language-python">__rtruediv__(self, other)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>divide two values</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/engine.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __rtruediv__(self, other):  # other / self
+    """divide two values"""
+    return other * self**-1
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.engine.Value.__sub__" class="doc doc-heading">
+<code class="highlight language-python">__sub__(self, other)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>subtract two values</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/engine.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __sub__(self, other):  # self - other
+    """subtract two values"""
+    return self + (-other)
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.engine.Value.__truediv__" class="doc doc-heading">
+<code class="highlight language-python">__truediv__(self, other)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>divide two values</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/engine.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __truediv__(self, other):  # self / other
+    """divide two values"""
+    return self * other**-1
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.engine.Value.backward" class="doc doc-heading">
+<code class="highlight language-python">backward(self)</code>
+
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>backpropagate the gradient through the graph</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/engine.py</code></summary>
+          <pre class="highlight"><code class="language-python">def backward(self):
+    """backpropagate the gradient through the graph"""
+    # topological order all of the children in the graph
+    topo = []
+    visited = set()
+
+    def build_topo(v):
+        if v not in visited:
+            visited.add(v)
+            for child in v._prev:
+                build_topo(child)
+            topo.append(v)
+
+    build_topo(self)
+
+    # go one variable at a time and apply the chain rule to get its gradient
+    self.grad = 1
+    for v in reversed(topo):
+        v._backward()
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.engine.Value.relu" class="doc doc-heading">
+<code class="highlight language-python">relu(self)</code>
+
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>relu activation function</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/engine.py</code></summary>
+          <pre class="highlight"><code class="language-python">def relu(self):
+    """relu activation function"""
+    out = Value(0 if self.data &lt; 0 else self.data, (self,), "ReLU")
+
+    def _backward():
+        self.grad += (out.data &gt; 0) * out.grad
+
+    out._backward = _backward
+
+    return out
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../nn/" class="btn btn-neutral float-left" title="data"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/GokuMohandas/mlops-course/" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../nn/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

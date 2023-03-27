@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://madewithml.com/micrograd/nn/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>data - Made With ML</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link href="../../assets/_mkdocstrings.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "data";
+        var mkdocs_page_input_path = "micrograd/nn.md";
+        var mkdocs_page_url = "/micrograd/nn/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Made With ML
+        </a>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">workflows</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../main.md">main</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">tagifai</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">data</a>
+    <ul class="current">
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../engine/">evaluate</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Made With ML</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>tagifai &raquo;</li><li>data</li>
+    <li class="wy-breadcrumbs-aside">
+        <a href="https://github.com/GokuMohandas/mlops-course/edit/master/docs/micrograd/nn.md"
+          class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div class="doc doc-object doc-module">
+
+<a id="micrograd.nn"></a>
+    <div class="doc doc-contents first">
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 id="micrograd.nn.Layer" class="doc doc-heading">
+        <code>
+Layer            (<a class="autorefs autorefs-internal" title="micrograd.nn.Module" href="#micrograd.nn.Module">Module</a>)
+        </code>
+
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>A layer of <code>nout</code> neurons with <code>nin</code> inputs.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">class Layer(Module):
+    """A layer of `nout` neurons with `nin` inputs."""
+
+    def __init__(self, nin, nout, **kwargs):
+        self.neurons = [Neuron(nin, **kwargs) for _ in range(nout)]
+
+    def __call__(self, x):
+        """Computes the output of the layer for the given input."""
+        out = [n(x) for n in self.neurons]
+        return out[0] if len(out) == 1 else out
+
+    def parameters(self):
+        """Returns a list of all parameters in the module."""
+        return [p for n in self.neurons for p in n.parameters()]
+
+    def __repr__(self):
+        """Returns a string representation of the layer."""
+        return f"Layer of [{', '.join(str(n) for n in self.neurons)}]"
+</code></pre>
+        </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.nn.Layer.__call__" class="doc doc-heading">
+<code class="highlight language-python">__call__(self, x)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Computes the output of the layer for the given input.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __call__(self, x):
+    """Computes the output of the layer for the given input."""
+    out = [n(x) for n in self.neurons]
+    return out[0] if len(out) == 1 else out
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.nn.Layer.__repr__" class="doc doc-heading">
+<code class="highlight language-python">__repr__(self)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Returns a string representation of the layer.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __repr__(self):
+    """Returns a string representation of the layer."""
+    return f"Layer of [{', '.join(str(n) for n in self.neurons)}]"
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.nn.Layer.parameters" class="doc doc-heading">
+<code class="highlight language-python">parameters(self)</code>
+
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Returns a list of all parameters in the module.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">def parameters(self):
+    """Returns a list of all parameters in the module."""
+    return [p for n in self.neurons for p in n.parameters()]
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 id="micrograd.nn.MLP" class="doc doc-heading">
+        <code>
+MLP            (<a class="autorefs autorefs-internal" title="micrograd.nn.Module" href="#micrograd.nn.Module">Module</a>)
+        </code>
+
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>A multi-layer perceptron with <code>nin</code> inputs and <code>nouts</code> outputs.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">class MLP(Module):
+    """A multi-layer perceptron with `nin` inputs and `nouts` outputs."""
+
+    def __init__(self, nin, nouts):
+        """Creates an MLP with `nin` inputs and `nouts` outputs.
+
+        Args:
+            nin: number of inputs
+            nouts: list of numbers of outputs for each layer
+        """
+        sz = [nin] + nouts
+        self.layers = [
+            Layer(sz[i], sz[i + 1], nonlin=i != len(nouts) - 1)
+            for i in range(len(nouts))
+        ]
+
+    def __call__(self, x):
+        """Computes the output of the MLP for the given input.
+        Args:
+            x: input tensor
+        Returns:
+            output tensor
+        """
+        for layer in self.layers:
+            x = layer(x)
+        return x
+
+    def parameters(self):
+        """Returns a list of all parameters in the module.
+        Returns:
+            list of parameters
+        """
+        return [p for layer in self.layers for p in layer.parameters()]
+
+    def __repr__(self):
+        """Returns a string representation of the MLP.
+        Returns:
+            string representation
+        """
+        return f"MLP of [{', '.join(str(layer) for layer in self.layers)}]"
+</code></pre>
+        </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.nn.MLP.__call__" class="doc doc-heading">
+<code class="highlight language-python">__call__(self, x)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Computes the output of the MLP for the given input.</p>
+
+<table class="field-list">
+  <colgroup>
+    <col class="field-name" />
+    <col class="field-body" />
+  </colgroup>
+  <tbody valign="top">
+    <tr class="field">
+      <th class="field-name">Parameters:</th>
+      <td class="field-body">
+        <ul class="first simple">
+            <li><p><strong>x</strong> – input tensor</p></li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<table class="field-list">
+  <colgroup>
+    <col class="field-name" />
+    <col class="field-body" />
+  </colgroup>
+  <tbody valign="top">
+    <tr class="field">
+    <th class="field-name">Returns:</th>
+    <td class="field-body">
+        <ul class="first simple">
+          <li><p>output tensor</p></li>
+        </ul>
+    </td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __call__(self, x):
+    """Computes the output of the MLP for the given input.
+    Args:
+        x: input tensor
+    Returns:
+        output tensor
+    """
+    for layer in self.layers:
+        x = layer(x)
+    return x
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.nn.MLP.__init__" class="doc doc-heading">
+<code class="highlight language-python">__init__(self, nin, nouts)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Creates an MLP with <code>nin</code> inputs and <code>nouts</code> outputs.</p>
+
+<table class="field-list">
+  <colgroup>
+    <col class="field-name" />
+    <col class="field-body" />
+  </colgroup>
+  <tbody valign="top">
+    <tr class="field">
+      <th class="field-name">Parameters:</th>
+      <td class="field-body">
+        <ul class="first simple">
+            <li><p><strong>nin</strong> – number of inputs</p></li>
+            <li><p><strong>nouts</strong> – list of numbers of outputs for each layer</p></li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __init__(self, nin, nouts):
+    """Creates an MLP with `nin` inputs and `nouts` outputs.
+
+    Args:
+        nin: number of inputs
+        nouts: list of numbers of outputs for each layer
+    """
+    sz = [nin] + nouts
+    self.layers = [
+        Layer(sz[i], sz[i + 1], nonlin=i != len(nouts) - 1)
+        for i in range(len(nouts))
+    ]
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.nn.MLP.__repr__" class="doc doc-heading">
+<code class="highlight language-python">__repr__(self)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Returns a string representation of the MLP.</p>
+
+<table class="field-list">
+  <colgroup>
+    <col class="field-name" />
+    <col class="field-body" />
+  </colgroup>
+  <tbody valign="top">
+    <tr class="field">
+    <th class="field-name">Returns:</th>
+    <td class="field-body">
+        <ul class="first simple">
+          <li><p>string representation</p></li>
+        </ul>
+    </td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __repr__(self):
+    """Returns a string representation of the MLP.
+    Returns:
+        string representation
+    """
+    return f"MLP of [{', '.join(str(layer) for layer in self.layers)}]"
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.nn.MLP.parameters" class="doc doc-heading">
+<code class="highlight language-python">parameters(self)</code>
+
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Returns a list of all parameters in the module.</p>
+
+<table class="field-list">
+  <colgroup>
+    <col class="field-name" />
+    <col class="field-body" />
+  </colgroup>
+  <tbody valign="top">
+    <tr class="field">
+    <th class="field-name">Returns:</th>
+    <td class="field-body">
+        <ul class="first simple">
+          <li><p>list of parameters</p></li>
+        </ul>
+    </td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">def parameters(self):
+    """Returns a list of all parameters in the module.
+    Returns:
+        list of parameters
+    """
+    return [p for layer in self.layers for p in layer.parameters()]
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 id="micrograd.nn.Module" class="doc doc-heading">
+        <code>
+Module        </code>
+
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Base class for all neural network modules.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">class Module:
+    """Base class for all neural network modules."""
+
+    def zero_grad(self):
+        """Sets the gradient of all parameters to zero."""
+        for p in self.parameters():
+            p.grad = 0
+
+    def parameters(self):
+        """Returns a list of all parameters in the module."""
+        return []
+</code></pre>
+        </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.nn.Module.parameters" class="doc doc-heading">
+<code class="highlight language-python">parameters(self)</code>
+
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Returns a list of all parameters in the module.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">def parameters(self):
+    """Returns a list of all parameters in the module."""
+    return []
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.nn.Module.zero_grad" class="doc doc-heading">
+<code class="highlight language-python">zero_grad(self)</code>
+
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Sets the gradient of all parameters to zero.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">def zero_grad(self):
+    """Sets the gradient of all parameters to zero."""
+    for p in self.parameters():
+        p.grad = 0
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 id="micrograd.nn.Neuron" class="doc doc-heading">
+        <code>
+Neuron            (<a class="autorefs autorefs-internal" title="micrograd.nn.Module" href="#micrograd.nn.Module">Module</a>)
+        </code>
+
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>A single neuron with <code>nin</code> inputs.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">class Neuron(Module):
+    """A single neuron with `nin` inputs."""
+
+    def __init__(self, nin, nonlin=True):
+        """Creates a neuron with `nin` inputs."""
+        self.w = [Value(random.uniform(-1, 1)) for _ in range(nin)]
+        self.b = Value(0)
+        self.nonlin = nonlin
+
+    def __call__(self, x):
+        """Computes the output of the neuron for the given input."""
+        act = sum((wi * xi for wi, xi in zip(self.w, x)), self.b)
+        return act.relu() if self.nonlin else act
+
+    def parameters(self):
+        """Returns a list of all parameters in the module."""
+        return self.w + [self.b]
+
+    def __repr__(self):
+        """Returns a string representation of the neuron."""
+        return f"{'ReLU' if self.nonlin else 'Linear'}Neuron({len(self.w)})"
+</code></pre>
+        </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.nn.Neuron.__call__" class="doc doc-heading">
+<code class="highlight language-python">__call__(self, x)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Computes the output of the neuron for the given input.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __call__(self, x):
+    """Computes the output of the neuron for the given input."""
+    act = sum((wi * xi for wi, xi in zip(self.w, x)), self.b)
+    return act.relu() if self.nonlin else act
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.nn.Neuron.__init__" class="doc doc-heading">
+<code class="highlight language-python">__init__(self, nin, nonlin=True)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Creates a neuron with <code>nin</code> inputs.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __init__(self, nin, nonlin=True):
+    """Creates a neuron with `nin` inputs."""
+    self.w = [Value(random.uniform(-1, 1)) for _ in range(nin)]
+    self.b = Value(0)
+    self.nonlin = nonlin
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.nn.Neuron.__repr__" class="doc doc-heading">
+<code class="highlight language-python">__repr__(self)</code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Returns a string representation of the neuron.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">def __repr__(self):
+    """Returns a string representation of the neuron."""
+    return f"{'ReLU' if self.nonlin else 'Linear'}Neuron({len(self.w)})"
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="micrograd.nn.Neuron.parameters" class="doc doc-heading">
+<code class="highlight language-python">parameters(self)</code>
+
+
+</h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Returns a list of all parameters in the module.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>micrograd/nn.py</code></summary>
+          <pre class="highlight"><code class="language-python">def parameters(self):
+    """Returns a list of all parameters in the module."""
+    return self.w + [self.b]
+</code></pre>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../.." class="btn btn-neutral float-left" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../engine/" class="btn btn-neutral float-right" title="evaluate">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/GokuMohandas/mlops-course/" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../.." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../engine/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
